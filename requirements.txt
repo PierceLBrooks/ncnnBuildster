@@ -1,0 +1,1 @@
+buildster>=1.0
