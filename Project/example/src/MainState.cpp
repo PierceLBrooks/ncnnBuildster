@@ -22,7 +22,6 @@ bool sfml::MainState::checkDraw() const
 
 void sfml::MainState::enter()
 {
-    auto memoryInfo = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
     unsigned int dimension = 1;
 	drawableStack = new DrawableStack();
     drawMode = 0;
@@ -59,7 +58,7 @@ void sfml::MainState::enter()
     brushSpr->setOrigin(brushSizeMax, brushSizeMax);
     background = new sf::RectangleShape();
     background->setSize(sf::Vector2f(dimension,dimension)*static_cast<float>(scale));
-    foreground->setFillColor(sf::Color(128,128,128));
+    background->setFillColor(sf::Color(192,192,192));
     foreground = new sf::RectangleShape();
     foreground->setSize(sf::Vector2f(window.x*.25f,window.y));
     foreground->setPosition(window.x-(window.x*.25f),0);
@@ -140,9 +139,6 @@ void sfml::MainState::enter()
     drawableStack->addDrawable(paletteGrayOutline, 5);
     drawableStack->addDrawable(colorSelectTxt, 5);
     drawableStack->addDrawable(brushSizeSliderTxt, 6);
-    session = new Ort::Session(environment, "mnist.onnx", Ort::SessionOptions(nullptr));
-    inputTensor = Ort::Value::CreateTensor<float>(memoryInfo, inputData.data(), inputData.size(), inputShape.data(), inputShape.size());
-    outputTensor = Ort::Value::CreateTensor<float>(memoryInfo, outputData.data(), outputData.size(), outputShape.data(), outputShape.size());
 }
 
 void sfml::MainState::exit()

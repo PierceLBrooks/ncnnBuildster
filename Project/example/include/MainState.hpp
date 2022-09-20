@@ -5,7 +5,7 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
-#include <onnxruntime/core/session/onnxruntime_cxx_api.h>
+#include <ncnn/net.h>
 #include "State.hpp"
 
 namespace sfml
@@ -52,14 +52,7 @@ namespace sfml
 			sf::Text* brushSizeSliderTxt;
 			sf::Font* font;
 			
-            std::array<float, INPUT_WIDTH*INPUT_HEIGHT> inputData{};
-            std::array<float, 10> outputData{};
-            std::array<int64_t, 4> inputShape{1,1,INPUT_WIDTH,INPUT_HEIGHT};
-            std::array<int64_t, 2> outputShape{1,10};
-            Ort::Value inputTensor{nullptr};
-            Ort::Value outputTensor{nullptr};
-            Ort::Env environment;
-            Ort::Session* session;
+            ncnn::Net* model;
 
 			static MainState* instance;
 

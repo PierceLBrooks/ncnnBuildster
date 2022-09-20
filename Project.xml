@@ -131,6 +131,16 @@
             <key>NCNN_LIBRARIES_PATH</key>
             <value><install></install>/lib</value>
           </export>
+          <if_check id="BUILDSTER_OS" check="Darwin">
+            <export type="headers">
+              <key>VULKAN_INCLUDE_PATH</key>
+              <value><data id="VULKAN_SDK"></data>/../MoltenVK/include</value>
+            </export>
+            <export type="libraries">
+              <key>VULKAN_LIBRARIES_PATH</key>
+              <value><data id="VULKAN_SDK"></data>/../MoltenVK/dylib/macOS</value>
+            </export>
+          </if_check>
         </exports>
         <imports></imports>
       </dependency>
@@ -148,6 +158,9 @@
         </generator>
         <definitions></definitions>
         <links>
+          <if_check id="BUILDSTER_OS" check="Darwin">
+            <link>Molten*</link>
+          </if_check>
           <link>ncnn*</link>
           <link>sfml-graphics*</link>
           <link>sfml-window*</link>
