@@ -1,6 +1,10 @@
 #ifndef MAIN_STATE_HPP
 #define MAIN_STATE_HPP
 
+#ifdef _WIN32
+#define NOMINMAX
+#endif
+
 #include <vector>
 #include <array>
 #include <cmath>
