@@ -59,40 +59,10 @@
           </git_repo>
         </remote>
         <build>
-          <pre>
-            <build>
-              <shells>
-                <shell>
-                  <work><origin></origin></work>
-                  <commands>
-                    <if_check id="BUILDSTER_OS" check="Darwin">
-                      <command>
-                        <set>
-                          <key>VULKAN_SDK</key>
-                          <value><home></home>/VulkanSDK/1.3.224.1/macOS</value>
-                        </set>
-                      </command>
-                    </if_check>
-                    <command>
-                      <set>
-                        <key>Protobuf_ROOT</key>
-                        <value>
-                          <switch id="BUILDSTER_OS">
-                            <case check="Windows"><home></home>/protobuf</case>
-                            <case check="Linux">/usr/lib/protobuf</case>
-                            <case check="Darwin">/usr/local/opt/protobuf</case>
-                            <default><quit></quit></default>
-                          </switch>
-                        </value>
-                      </set>
-                    </command>
-                  </commands>
-                </shell>
-              </shells>
-            </build>
-          </pre>
           <arguments>
             <if_check id="BUILDSTER_OS" check="Darwin">
+              <argument>-DNCNN_OPENMP=OFF</argument>
+              <argument>-DCMAKE_OSX_ARCHITECTURES="x86_64"</argument>
               <argument>-DVulkan_INCLUDE_DIR=<data id="VULKAN_SDK"></data>/../MoltenVK/include</argument>
               <argument>-DVulkan_LIBRARY=<data id="VULKAN_SDK"></data>/../MoltenVK/dylib/macOS/libMoltenVK.dylib</argument>
             </if_check>
@@ -126,12 +96,20 @@
           </export>
           <if_check id="BUILDSTER_OS" check="Darwin">
             <export type="headers">
-              <key>VULKAN_INCLUDE_PATH</key>
+              <key>MOLTENVK_INCLUDE_PATH</key>
               <value><data id="VULKAN_SDK"></data>/../MoltenVK/include</value>
             </export>
             <export type="libraries">
-              <key>VULKAN_LIBRARIES_PATH</key>
+              <key>MOLTENVK_LIBRARIES_PATH</key>
               <value><data id="VULKAN_SDK"></data>/../MoltenVK/dylib/macOS</value>
+            </export>
+            <export type="headers">
+              <key>VULKAN_INCLUDE_PATH</key>
+              <value><data id="VULKAN_SDK"></data>/include</value>
+            </export>
+            <export type="libraries">
+              <key>VULKAN_LIBRARIES_PATH</key>
+              <value><data id="VULKAN_SDK"></data>/lib</value>
             </export>
           </if_check>
           <if_check id="BUILDSTER_OS" check="Windows">
@@ -154,7 +132,7 @@
         <generator>
           <switch id="BUILDSTER_OS">
             <case check="Windows">Visual Studio 16 2019</case>
-            <case check="Linux">CodeBlocks - Unix Makefiles</case>
+            <case check="Linux">Unix Makefiles</case>
             <case check="Darwin">Xcode</case>
             <default><quit></quit></default>
           </switch>
@@ -164,6 +142,13 @@
           <link>ncnn*</link>
           <if_check id="BUILDSTER_OS" check="Darwin">
             <link>Molten*</link>
+            <link>MachineIndependent*</link>
+            <link>GenericCodeGen*</link>
+            <link>OSDependent*</link>
+            <link>OGLCompiler*</link>
+            <link>SPIRV*</link>
+            <link>glslang*</link>
+            <link>vulkan*</link>
           </if_check>
           <if_check id="BUILDSTER_OS" check="Windows">
             <link>setupapi</link>
