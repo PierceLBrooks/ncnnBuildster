@@ -28,9 +28,10 @@ namespace sfml
 			sf::Color colorConvert(sf::Vector3f color);
 			void drawLine(sf::Vector2f point1, sf::Vector2f point2);
 			void draw(sf::Vector2f point);
-			bool drawing, brushMode;
+			bool drawing, brushMode, inferMode, eraseMode;
 			float deltaTime;
 			int brushSize, brushSizeMax, drawMode, gray, scale;
+      unsigned int dimension;
 			sf::Color brushColor;
 			sf::Image* pictureImg;
 			sf::Image* brushImg;
@@ -46,6 +47,8 @@ namespace sfml
 			sf::RectangleShape* colorUnit;
 			sf::RectangleShape* brushSizeSliderBack;
 			sf::RectangleShape* brushSizeSlider;
+			sf::RectangleShape* infer;
+			sf::RectangleShape* erase;
 			sf::RenderTexture* paletteColorTex;
 			sf::RenderTexture* paletteGrayTex;
 			sf::RectangleShape* paletteColorOutline;
@@ -54,9 +57,11 @@ namespace sfml
 			sf::Sprite* paletteGraySpr;
 			sf::Text* colorSelectTxt;
 			sf::Text* brushSizeSliderTxt;
+      sf::Text* inferTxt;
+      sf::Text* eraseTxt;
 			sf::Font* font;
 			
-            ncnn::Net* model;
+      ncnn::Net* model;
 
 			static MainState* instance;
 

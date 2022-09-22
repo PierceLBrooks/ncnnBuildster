@@ -173,6 +173,12 @@
             <link>gdi32</link>
             <link>crypt32</link>
             <link>ws2_32</link>
+            <link>MachineIndependent*</link>
+            <link>GenericCodeGen*</link>
+            <link>OSDependent*</link>
+            <link>OGLCompiler*</link>
+            <link>SPIRV*</link>
+            <link>glslang*</link>
             <link>vulkan*</link>
           </if_check>
           <link>ncnn*</link>
@@ -199,6 +205,27 @@
                 <to><distribution></distribution></to>
               </copy>
             </command>
+            <command>
+              <copy>
+                <from><distribution></distribution>/../../ncnn.bin</from>
+                <to><distribution></distribution></to>
+              </copy>
+            </command>
+            <command>
+              <copy>
+                <from><distribution></distribution>/../../ncnn.param</from>
+                <to><distribution></distribution></to>
+              </copy>
+            </command>
+            <if_check id="BUILDSTER_OS" check="Windows">
+              <command>
+                <copy>
+                  <from>C:/Windows/System32/vulkan-1-1-*</from>
+                  <to><distribution></distribution></to>
+                  <rename>vulkan-1.dll</rename>
+                </copy>
+              </command>
+            </if_check>
           </commands>
         </shell>
       </shells>

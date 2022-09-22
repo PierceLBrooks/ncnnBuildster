@@ -22,8 +22,8 @@ bool sfml::MainState::checkDraw() const
 
 void sfml::MainState::enter()
 {
-    unsigned int dimension = 1;
-	drawableStack = new DrawableStack();
+    dimension = 1;
+    drawableStack = new DrawableStack();
     drawMode = 0;
     scale = 3;
     deltaTime = 0;
@@ -38,12 +38,13 @@ void sfml::MainState::enter()
     brushSizeMax = 25;
     drawing = false;
     brushMode = false;
+    inferMode = false;
     brushColor = sf::Color::Black;
     font = new sf::Font();
     font->loadFromFile("rmono.ttf");
     pictureImg = new sf::Image();
     dimension = static_cast<unsigned int>(std::min((window.x/scale)*.75f,window.y/scale));
-    pictureImg->create(dimension,dimension,sf::Color::Transparent);
+    pictureImg->create(dimension,dimension,sf::Color::White);
     pictureTex = new sf::Texture();
     pictureTex->loadFromImage(*pictureImg);
     pictureSpr = new sf::Sprite(*pictureTex);
@@ -116,6 +117,18 @@ void sfml::MainState::enter()
     brushSizeSlider->setSize(sf::Vector2f(8,32));
     brushSizeSlider->setFillColor(sf::Color::Black);
     brushSizeSlider->setPosition(window.x-(window.x*.25f)+32,(window.y/16)*4);
+    infer = new sf::RectangleShape();
+    infer->setSize(sf::Vector2f(256,32));
+    infer->setFillColor(sf::Color::White);
+    infer->setPosition(window.x-(window.x*.25f)+32,(window.y/16)*5);
+    infer->setOutlineColor(sf::Color::Black);
+    infer->setOutlineThickness(2);
+    erase = new sf::RectangleShape();
+    erase->setSize(sf::Vector2f(256,32));
+    erase->setFillColor(sf::Color::White);
+    erase->setPosition(window.x-(window.x*.25f)+32,(window.y/16)*6);
+    erase->setOutlineColor(sf::Color::Black);
+    erase->setOutlineThickness(2);
     colorSelectTxt = new sf::Text(sf::String("Brush Color"), *font, 20);
     colorSelectTxt->setPosition(colorSelect->getPosition().x+128,colorSelect->getPosition().y+4);
     colorSelectTxt->setFillColor(sf::Color::White);
@@ -126,6 +139,16 @@ void sfml::MainState::enter()
     brushSizeSliderTxt->setFillColor(sf::Color(128,128,128));
     brushSizeSliderTxt->setOrigin(brushSizeSliderTxt->getGlobalBounds().width/2,0);
     brushSizeSliderTxt->setStyle(sf::Text::Bold);
+    inferTxt = new sf::Text(sf::String("Infer"), *font, 20);
+    inferTxt->setPosition(infer->getPosition().x+128,infer->getPosition().y+4);
+    inferTxt->setFillColor(sf::Color(128,128,128));
+    inferTxt->setOrigin(inferTxt->getGlobalBounds().width/2,0);
+    inferTxt->setStyle(sf::Text::Bold);
+    eraseTxt = new sf::Text(sf::String("Erase"), *font, 20);
+    eraseTxt->setPosition(erase->getPosition().x+128,erase->getPosition().y+4);
+    eraseTxt->setFillColor(sf::Color(128,128,128));
+    eraseTxt->setOrigin(eraseTxt->getGlobalBounds().width/2,0);
+    eraseTxt->setStyle(sf::Text::Bold);
     drawableStack->addDrawable(brushSpr, 3);
     drawableStack->addDrawable(background, 1);
     drawableStack->addDrawable(pictureSpr, 2);
@@ -135,14 +158,41 @@ void sfml::MainState::enter()
     drawableStack->addDrawable(paletteGraySpr, 6);
     drawableStack->addDrawable(brushSizeSlider, 7);
     drawableStack->addDrawable(brushSizeSliderBack, 5);
+    drawableStack->addDrawable(infer, 5);
+    drawableStack->addDrawable(erase, 5);
     drawableStack->addDrawable(paletteColorOutline, 5);
     drawableStack->addDrawable(paletteGrayOutline, 5);
     drawableStack->addDrawable(colorSelectTxt, 5);
     drawableStack->addDrawable(brushSizeSliderTxt, 6);
+    drawableStack->addDrawable(inferTxt, 6);
+    drawableStack->addDrawable(eraseTxt, 6);
+    
+    model = new ncnn::Net();
+    
+    ncnn::VulkanDevice* vkdev = ncnn::get_gpu_device();
+
+    ncnn::VkAllocator* blob_vkallocator = new ncnn::VkBlobAllocator(vkdev);
+    ncnn::VkAllocator* staging_vkallocator = new ncnn::VkStagingAllocator(vkdev);
+
+    model->opt.blob_vkallocator = blob_vkallocator;
+    model->opt.workspace_vkallocator = blob_vkallocator;
+    model->opt.staging_vkallocator = staging_vkallocator;
+
+    model->set_vulkan_device(0);
+    model->opt.use_vulkan_compute = 1;
+    
+    model->load_param("ncnn.param");
+    model->load_model("ncnn.bin");
 }
 
 void sfml::MainState::exit()
 {
+  delete model->opt.blob_vkallocator;
+  model->opt.blob_vkallocator = nullptr;
+  delete model->opt.staging_vkallocator;
+  model->opt.staging_vkallocator = nullptr;
+  delete model;
+  model = nullptr;
 	drawableStack->removeDrawables();
 	delete drawableStack;
 	drawableStack = nullptr;
@@ -245,6 +295,71 @@ void sfml::MainState::update()
             brushTex->loadFromImage(*brushImg);
             brushSpr->setOrigin(brushSizeMax, brushSizeMax);
         }
+        if ((infer->getPosition().x-32 <= mouseReal.x) &&
+            (infer->getPosition().y <= mouseReal.y) &&
+            (infer->getPosition().x+(window.x*.25f)+32 >= mouseReal.x) &&
+            (infer->getPosition().y+32 >= mouseReal.y))
+        {
+            if (!inferMode)
+            {
+                inferMode = true;
+                
+                sf::Image* img = new sf::Image();
+                img->create(pictureImg->getSize().x, pictureImg->getSize().y, pictureImg->getPixelsPtr());
+                
+                for (int x = 0; x != img->getSize().x; ++x)
+                {
+                    for (int y = 0; y != img->getSize().y; ++y)
+                    {
+                        sf::Color color = img->getPixel(x, y);
+                        color.r = 255-color;
+                        color.g = 255-color;
+                        color.b = 255-color;
+                        img->setPixel(x, y, color);
+                    }
+                }
+                
+                ncnn::Extractor ex = model->create_extractor();
+                ncnn::Mat in = ncnn::Mat::from_pixels_resize(img->getPixelsPtr(), ncnn::Mat::PIXEL_RGBA2GRAY, img->getSize().x, img->getSize().y, 28, 28);
+                ncnn::Mat out;
+                ex.input("flatten_input", in);
+                ex.extract("dense_2", out);
+                
+                for (int i = 0; i != 10; ++i)
+                {
+                    std::cout << i << '\t' << out.channel(0)[i] << std::endl;
+                }
+                std::cout << std::endl;
+                
+                delete img;
+            }
+        }
+        if ((erase->getPosition().x-32 <= mouseReal.x) &&
+            (erase->getPosition().y <= mouseReal.y) &&
+            (erase->getPosition().x+(window.x*.25f)+32 >= mouseReal.x) &&
+            (erase->getPosition().y+32 >= mouseReal.y))
+        {
+            if (!eraseMode)
+            {
+                eraseMode = true;
+                drawableStack->removeDrawable(pictureSpr);
+                delete pictureSpr;
+                delete pictureTex;
+                delete pictureImg;
+                pictureImg = new sf::Image();
+                pictureImg->create(dimension,dimension,sf::Color::White);
+                pictureTex = new sf::Texture();
+                pictureTex->loadFromImage(*pictureImg);
+                pictureSpr = new sf::Sprite(*pictureTex);
+                pictureSpr->setScale(scale,scale);
+                drawableStack->addDrawable(pictureSpr, 2);
+            }
+        }
+    }
+    else
+    {
+        inferMode = false;
+        eraseMode = false;
     }
     mousePrev = mouse;
     if ((mouse.x >= 0) && (mouse.y >= 0) && (mouse.x < pictureImg->getSize().x) && (mouse.y < pictureImg->getSize().y))
