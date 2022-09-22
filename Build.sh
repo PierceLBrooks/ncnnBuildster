@@ -1,5 +1,5 @@
 #!/bin/sh
-python3 -m pip install buildster
+git submodule update --init --recursive
 export VULKAN_SDK=$HOME/VulkanSDK/1.3.224.1/macos
-buildster ./Project.xml
+python3 ./Buildster/buildster/buildster.py ./Project.xml
 
