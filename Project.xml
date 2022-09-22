@@ -161,6 +161,7 @@
         </generator>
         <definitions></definitions>
         <links>
+          <link>ncnn*</link>
           <if_check id="BUILDSTER_OS" check="Darwin">
             <link>Molten*</link>
           </if_check>
@@ -181,7 +182,14 @@
             <link>glslang*</link>
             <link>vulkan*</link>
           </if_check>
-          <link>ncnn*</link>
+          <if_check id="BUILDSTER_OS" check="Linux">
+            <link>MachineIndependent*</link>
+            <link>GenericCodeGen*</link>
+            <link>OSDependent*</link>
+            <link>OGLCompiler*</link>
+            <link>SPIRV*</link>
+            <link>glslang*</link>
+          </if_check>
           <link>sfml-graphics*</link>
           <link>sfml-window*</link>
           <link>sfml-audio*</link>
@@ -192,6 +200,42 @@
           <import>sfml</import>
           <import>ncnn</import>
         </imports>
+        <if_check id="BUILDSTER_OS" check="Linux">
+          <packages>
+            <package>
+              <label>OpenMP</label>
+              <exports>
+                <export type="libraries">
+                  <key>OpenMP_CXX_LIBRARIES</key>
+                  <value></value>
+                </export>
+                <export type="headers">
+                  <key>OpenMP_INCLUDE_DIRS</key>
+                  <value></value>
+                </export>
+              </exports>
+              <variables>
+                <variable>
+                  <key>CMAKE_CXX_FLAGS</key>
+                  <value>"${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}"</value>
+                </variable>
+              </variables>
+            </package>
+            <package>
+              <label>Vulkan</label>
+              <exports>
+                <export type="libraries">
+                  <key>Vulkan_LIBRARIES</key>
+                  <value></value>
+                </export>
+                <export type="headers">
+                  <key>Vulkan_INCLUDE_DIRS</key>
+                  <value></value>
+                </export>
+              </exports>
+            </package>
+          </packages>
+        </if_check>
       </target>
     </targets>
     <post>

@@ -312,9 +312,9 @@ void sfml::MainState::update()
                     for (int y = 0; y != img->getSize().y; ++y)
                     {
                         sf::Color color = img->getPixel(x, y);
-                        color.r = 255-color;
-                        color.g = 255-color;
-                        color.b = 255-color;
+                        color.r = 255-color.r;
+                        color.g = 255-color.g;
+                        color.b = 255-color.b;
                         img->setPixel(x, y, color);
                     }
                 }
